@@ -54,6 +54,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			node.vm.provision :shell, path: "../_shared/scripts/setup-docker.sh"
 			node.vm.provision :shell, path: "../_shared/scripts/setup-docker-compose.sh"
 			node.vm.provision :shell, path: "../_shared/scripts/setup-swarm-hosts.sh"
+			node.vm.provision :shell, path: "../_shared/scripts/generate-certs.sh"			
 
 			# abilita l'accesso remoto sui nodi (non serve, grazie al file override.conf) 
 			### node.vm.provision :shell, path: "../_shared/scripts/setup-swarm-remote-access.sh"
