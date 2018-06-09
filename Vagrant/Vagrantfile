@@ -29,6 +29,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # - Docker 
     # - Docker-compose 	
     #
+	
     $swarm_num_nodes.downto(1).each do |i| 
         config.vm.define vm_name = "swarm-%01d" % [i] do |node|
 			node.vm.hostname = vm_name    
@@ -49,12 +50,24 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
  
 			# 8080 -> 808i per evitare conflitti sulla porta 8080 con altre vm (e.g., developer) 
 			node.vm.network "forwarded_port", guest: 8080, host: "#{8080+i}", id: 'http', auto_correct: true
-
+			
+			# crea chiavi e certificati una sola volta all'avvio della prima macchina swarm-3
+			if i==3
+				node.vm.provision :shell, path: "../_shared/scripts/generate-certs.sh"
+			end
+			
+			# copia le chiavi in /home/vagrant sui nodi swarm
+			node.vm.provision :shell, :inline => 'mkdir -p /home/vagrant/.certs'
+			node.vm.provision :shell, :inline => 'cp /home/asw/_shared/resources/ca.pem /home/vagrant/.certs'
+			node.vm.provision :shell, :inline => 'cp /home/asw/_shared/resources/server-key.pem /home/vagrant/.certs'
+			node.vm.provision :shell, :inline => 'cp /home/asw/_shared/resources/server-cert.pem /home/vagrant/.certs'
+			 
 			# installa docker e docker compose 
 			node.vm.provision :shell, path: "../_shared/scripts/setup-docker.sh"
 			node.vm.provision :shell, path: "../_shared/scripts/setup-docker-compose.sh"
 			node.vm.provision :shell, path: "../_shared/scripts/setup-swarm-hosts.sh"
-			node.vm.provision :shell, path: "../_shared/scripts/generate-certs.sh"			
+			#node.vm.provision :shell, path: "../_shared/scripts/create-overrideconf.sh"
+			
 
 			# abilita l'accesso remoto sui nodi (non serve, grazie al file override.conf) 
 			### node.vm.provision :shell, path: "../_shared/scripts/setup-swarm-remote-access.sh"
@@ -62,9 +75,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			# crea lo swarm sul nodo 1 (e avvia anche il registry per lo swarm)
 			if i==1 
 			  node.vm.provision :shell, path: "../_shared/scripts/start-swarm.sh"
-			  node.vm.provision :shell, path: "../_shared/scripts/start-swarm-registry.sh"
+			  node.vm.provision :shell, path: "../_shared/scripts/start-swarm-registry.sh"	
 			end
-
+			
 			# crea un link simbolico alla cartella dei progetti asw nella cartella dell'utente di default 
 			node.vm.provision :shell, :inline => 'ln -s /home/asw/projects projects'
 
@@ -103,6 +116,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         node.vm.provision :shell, path: "../_shared/scripts/setup-java.sh"
         node.vm.provision :shell, path: "../_shared/scripts/setup-gradle.sh"
         node.vm.provision :shell, path: "../_shared/scripts/setup-maven.sh"
+		
+		# copia le chiavi e certificati client in dev
+		node.vm.provision :shell, :inline => 'mkdir -p /home/vagrant/.certs'
+		node.vm.provision :shell, :inline => 'cp /home/asw/_shared/resources/ca.pem /home/vagrant/.certs'
+		node.vm.provision :shell, :inline => 'cp /home/asw/_shared/resources/client-key.pem /home/vagrant/.certs'
+		node.vm.provision :shell, :inline => 'cp /home/asw/_shared/resources/client-cert.pem /home/vagrant/.certs'
 
 		# installa docker e docker compose 
 		node.vm.provision :shell, path: "../_shared/scripts/setup-docker.sh"
@@ -114,9 +133,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
 		config.vm.provision :shell, 
 			inline: "echo  'configurazione di questo nodo dev completa'"
-			
+		
     end
 
+	#config.vm.provider "swarm-1" do |node|
+	#	node.vm.provision :shell, path: "../_shared/scripts/genera-certificati.sh"
+	#end
+	
 	config.vm.provision :shell, 
 		inline: "echo  'configurazione del cluster swarm completa'"
 
