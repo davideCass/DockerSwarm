@@ -1,4 +1,0 @@
-# application.yml 
----
-server:
-  port: 8761

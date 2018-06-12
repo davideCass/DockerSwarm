@@ -1,3 +1,0 @@
-grant codeBase "file:/home/asw/projects/asw-830-java-rmi/-" {
-    permission java.security.AllPermission;
-};
