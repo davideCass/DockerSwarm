@@ -36,6 +36,13 @@ openssl req -subj "/CN=dev" -new -key dev-priv-key.pem -out dev.csr
 openssl x509 -req -days 1825 -in dev.csr -CA ca.pem -CAkey ca-priv-key.pem -CAcreateserial -out dev-cert.pem -extensions v3_req -extfile /usr/lib/ssl/openssl.cnf
 openssl rsa -in dev-priv-key.pem -out dev-priv-key.pem
 
+#genera le chiavi per il registry
+#registry
+openssl genrsa -out reg-key.pem 2048
+openssl req -subj "/CN=my-registry" -new -key reg-key.pem -out reg.csr
+openssl x509 -req -days 1825 -in reg.csr -CA ca.pem -CAkey ca-priv-key.pem -CAcreateserial -out reg-cert.pem -extensions v3_req -extfile /usr/lib/ssl/openssl.cnf
+openssl rsa -in reg-key.pem -out reg-key.pem
+
 echo "certificati e chiavi create"
 
 #copia i certificati nella cartella /home/asw/_shared/resources/certs
